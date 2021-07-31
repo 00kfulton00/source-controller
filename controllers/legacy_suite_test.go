@@ -119,17 +119,6 @@ var _ = BeforeSuite(func(done Done) {
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred(), "failed to setup GtRepositoryReconciler")
 
-	err = (&HelmRepositoryReconciler{
-		Client:  k8sManager.GetClient(),
-		Scheme:  scheme.Scheme,
-		Storage: ginkgoTestStorage,
-		Getters: getter.Providers{getter.Provider{
-			Schemes: []string{"http", "https"},
-			New:     getter.NewHTTPGetter,
-		}},
-	}).SetupWithManager(k8sManager)
-	Expect(err).ToNot(HaveOccurred(), "failed to setup HelmRepositoryReconciler")
-
 	err = (&HelmChartReconciler{
 		Client:  k8sManager.GetClient(),
 		Scheme:  scheme.Scheme,

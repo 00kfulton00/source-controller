@@ -18,8 +18,6 @@ package v1beta1
 
 import (
 	"github.com/fluxcd/pkg/apis/meta"
-	"github.com/fluxcd/pkg/runtime/conditions"
-	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -29,6 +27,13 @@ const (
 	// HelmRepositoryURLIndexKey is the key to use for indexing HelmRepository
 	// resources by their HelmRepositorySpec.URL.
 	HelmRepositoryURLIndexKey = ".metadata.helmRepositoryURL"
+)
+
+const (
+	// DownloadFailedCondition indicates a transient or persistent download failure. If True, observations on the
+	// upstream Source revision are not possible, and the Artifact available for the Source may be outdated.
+	// This is a "negative polarity" or "abnormal-true" type, and is only present on the resource if it is True.
+	DownloadFailedCondition string = "DownloadFailed"
 )
 
 // HelmRepositorySpec defines the reference to a Helm repository.
@@ -99,47 +104,6 @@ const (
 	// given Helm repository succeeded.
 	IndexationSucceededReason string = "IndexationSucceed"
 )
-
-// HelmRepositoryProgressing resets the conditions of the HelmRepository to
-// metav1.Condition of type meta.ReadyCondition with status 'Unknown' and
-// meta.ProgressingReason reason and message. It returns the modified
-// HelmRepository.
-func HelmRepositoryProgressing(repository HelmRepository) HelmRepository {
-	repository.Status.ObservedGeneration = repository.Generation
-	repository.Status.URL = ""
-	repository.Status.Conditions = []metav1.Condition{}
-	conditions.MarkUnknown(&repository, meta.ReadyCondition, meta.ProgressingReason, "reconciliation in progress")
-	return repository
-}
-
-// HelmRepositoryReady sets the given Artifact and URL on the HelmRepository and
-// sets the meta.ReadyCondition to 'True', with the given reason and message. It
-// returns the modified HelmRepository.
-func HelmRepositoryReady(repository HelmRepository, artifact Artifact, url, reason, message string) HelmRepository {
-	repository.Status.Artifact = &artifact
-	repository.Status.URL = url
-	conditions.MarkTrue(&repository, meta.ReadyCondition, reason, message)
-	return repository
-}
-
-// HelmRepositoryNotReady sets the meta.ReadyCondition on the given
-// HelmRepository to 'False', with the given reason and message. It returns the
-// modified HelmRepository.
-func HelmRepositoryNotReady(repository HelmRepository, reason, message string) HelmRepository {
-	conditions.MarkFalse(&repository, meta.ReadyCondition, reason, message)
-	return repository
-}
-
-// HelmRepositoryReadyMessage returns the message of the metav1.Condition of type
-// meta.ReadyCondition with status 'True' if present, or an empty string.
-func HelmRepositoryReadyMessage(repository HelmRepository) string {
-	if c := apimeta.FindStatusCondition(repository.Status.Conditions, meta.ReadyCondition); c != nil {
-		if c.Status == metav1.ConditionTrue {
-			return c.Message
-		}
-	}
-	return ""
-}
 
 // GetConditions returns the status conditions of the object.
 func (in HelmRepository) GetConditions() []metav1.Condition {
