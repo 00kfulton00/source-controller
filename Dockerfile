@@ -15,6 +15,7 @@ RUN set -eux; \
         zlib1g-dev/unstable \
         libssh2-1-dev/unstable \
         libpcre3-dev/unstable \
+        git-secret \
     && apt-get clean \
     && apt-get autoremove --purge -y \
     && rm -rf /var/lib/apt/lists/*
